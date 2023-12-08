@@ -1,0 +1,64 @@
+openapi: "3.0.0"
+info:
+  title: "Sample API"
+  version: "1.0.0"
+
+x-yc-apigateway:
+  variables:
+    microservices.users:
+      default: "#/components/x-yc-apigateway-integrations/UsersMonolith"
+      enum:
+        - "#/components/x-yc-apigateway-integrations/UsersMonolith"
+        - "#/components/x-yc-apigateway-integrations/UsersMicroservice"
+
+paths:
+  /api/posts:
+    x-yc-apigateway-any-method:
+      summary: "Posts microservice"
+      parameters:
+        - name: "id"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+      x-yc-apigateway-integration:
+        type: "cloud_functions"
+        function_id: "${FUNCTION_ID_POSTS}"
+        tag: "${FUNCTION_TAG_POSTS}"
+        service_account_id: "${GW_SA_ID}"
+  /api/users:
+    x-yc-apigateway-any-method:
+      summary: "Users microservice"
+      parameters:
+        - name: "id"
+          in: "query"
+          required: true
+          schema:
+            type: "string"
+      x-yc-apigateway-integration:
+        $ref: "$${var.microservices.users}"
+  /api/{resource+}:
+    x-yc-apigateway-any-method:
+      summary: "Monolith endpoints"
+      parameters:
+        - name: "resource"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      x-yc-apigateway-integration:
+        type: "http"
+        url: "http://${NLB_IP}:80/api/{resource}"
+
+components:
+  x-yc-apigateway-integrations:
+    UsersMonolith:
+      type: "http"
+      query:
+        id: "{id}"
+      url: "http://${NLB_IP}:80/api/users"
+    UsersMicroservice:
+      type: "cloud_functions"
+      function_id: "${FUNCTION_ID_USERS}"
+      tag: "${FUNCTION_TAG_USERS}"
+      service_account_id: "${GW_SA_ID}"

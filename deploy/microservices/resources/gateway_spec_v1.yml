@@ -1,0 +1,50 @@
+openapi: "3.0.0"
+info:
+  title: "Sample API"
+  version: "1.0.0"
+
+x-yc-apigateway:
+  variables:
+    microservices.posts:
+      default: "#/components/x-yc-apigateway-integrations/PostsMonolith"
+      enum:
+        - "#/components/x-yc-apigateway-integrations/PostsMonolith"
+        - "#/components/x-yc-apigateway-integrations/PostsMicroservice"
+
+paths:
+  /api/posts:
+    x-yc-apigateway-any-method:
+      summary: "Posts microservice"
+      parameters:
+        - name: "id"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+      x-yc-apigateway-integration:
+        $ref: "$${var.microservices.posts}"
+  /api/{resource+}:
+    x-yc-apigateway-any-method:
+      summary: "Monolith endpoints"
+      parameters:
+        - name: "resource"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      x-yc-apigateway-integration:
+        type: "http"
+        url: "http://${APP_IP}:80/api/{resource}"
+
+components:
+  x-yc-apigateway-integrations:
+    PostsMicroservice:
+      type: "cloud_functions"
+      function_id: "${FUNCTION_ID}"
+      tag: "${FUNCTION_TAG}"
+      service_account_id: "${GW_SA_ID}"
+    PostsMonolith:
+      type: "http"
+      query:
+        id: "{id}"
+      url: "http://${APP_IP}:80/api/posts"

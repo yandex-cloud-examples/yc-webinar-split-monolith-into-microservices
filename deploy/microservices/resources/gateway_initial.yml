@@ -1,0 +1,18 @@
+openapi: "3.0.0"
+info:
+  title: "Sample API"
+  version: "1.0.0"
+
+paths:
+  /api/{resource+}:
+    x-yc-apigateway-any-method:
+      summary: "Monolith endpoints"
+      parameters:
+        - name: "resource"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      x-yc-apigateway-integration:
+        type: "http"
+        url: "http://${NLB_IP}:80/api/{resource}"

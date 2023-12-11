@@ -14,7 +14,7 @@ provider yandex {
 }
 
 locals {
-  yc_folder        = "b1gn83o3sk1622qu70ld"#var.YC_FOLDER
+  yc_folder        = var.FOLDER_ID
   yc_zone          = "ru-central1-a"
   yc_endpoint      = "api.cloud.yandex.net:443"
 }
